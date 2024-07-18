@@ -153,52 +153,35 @@ df.createOrReplaceTempView("raw_data")
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- Temporary views for dimension tables
-# MAGIC CREATE OR REPLACE TEMP VIEW date_dim AS
-# MAGIC SELECT DateKey, Date FROM DateDimension;
-# MAGIC
-# MAGIC CREATE OR REPLACE TEMP VIEW branch_dim AS
-# MAGIC SELECT BranchKey, BranchID FROM BranchDimension;
-# MAGIC
-# MAGIC CREATE OR REPLACE TEMP VIEW city_dim AS
-# MAGIC SELECT CityKey, City FROM CityDimension;
-# MAGIC
-# MAGIC CREATE OR REPLACE TEMP VIEW customer_type_dim AS
-# MAGIC SELECT CustomerTypeKey, CustomerType FROM CustomerTypeDimension;
-# MAGIC
-# MAGIC CREATE OR REPLACE TEMP VIEW gender_dim AS
-# MAGIC SELECT GenderKey, Gender FROM GenderDimension;
-# MAGIC
-# MAGIC CREATE OR REPLACE TEMP VIEW product_line_dim AS
-# MAGIC SELECT ProductLineKey, ProductLine FROM ProductLineDimension;
-# MAGIC
-# MAGIC CREATE OR REPLACE TEMP VIEW payment_dim AS
-# MAGIC SELECT PaymentKey, PaymentMethod FROM PaymentDimension;
-# MAGIC
-# MAGIC -- Insert data into Sales Fact Table
-# MAGIC INSERT INTO SalesFact (InvoiceID, `Date`, Time, BranchKey, CityKey, CustomerTypeKey, GenderKey, ProductLineKey, UnitPrice, Quantity, Tax, Total, PaymentKey, COGS, GrossMarginPercentage, GrossIncome, Rating)
+# MAGIC -- Insert data into SalesFact Table
+# MAGIC INSERT INTO SalesFact (invoice_id, date_key, time, branch_key, city_key, customer_type_key, gender_key, product_line_key, unit_price, quantity, tax, total, payment_key, cogs, gross_margin_percentage, gross_income, rating)
 # MAGIC SELECT 
-# MAGIC     r.`Invoice ID` AS InvoiceID,
-# MAGIC     to_date(r.Date, 'M/d/yyyy') AS `Date`,
-# MAGIC     r.Time,
-# MAGIC     b.BranchKey,
-# MAGIC     c.CityKey,
-# MAGIC     ct.CustomerTypeKey,
-# MAGIC     g.GenderKey,
-# MAGIC     p.ProductLineKey,
-# MAGIC     r.`Unit price` AS UnitPrice,
-# MAGIC     r.Quantity,
-# MAGIC     r.`Tax 5%` AS Tax,
-# MAGIC     r.Total,
-# MAGIC     pm.PaymentKey,
-# MAGIC     r.cogs AS COGS,
-# MAGIC     r.`gross margin percentage` AS GrossMarginPercentage,
-# MAGIC     r.`gross income` AS GrossIncome,
-# MAGIC     r.Rating
+# MAGIC     r.`Invoice ID` AS invoice_id,
+# MAGIC     dd.date_key,
+# MAGIC     r.Time AS time,
+# MAGIC     bd.branch_key,
+# MAGIC     cd.city_key,
+# MAGIC     ctd.customer_type_key,
+# MAGIC     gd.gender_key,
+# MAGIC     pld.product_line_key,
+# MAGIC     r.`Unit price` AS unit_price,
+# MAGIC     r.Quantity AS quantity,
+# MAGIC     r.`Tax 5%` AS tax,
+# MAGIC     r.Total AS total,
+# MAGIC     pd.payment_key,
+# MAGIC     (r.Total - r.`Tax 5%`) AS cogs, -- Assuming COGS is Total minus Tax
+# MAGIC     r.`Gross margin percentage` AS gross_margin_percentage,
+# MAGIC     r.`Gross income` AS gross_income,
+# MAGIC     r.Rating AS rating
 # MAGIC FROM raw_data r
-# MAGIC JOIN branch_dim b ON r.Branch = b.BranchID
-# MAGIC JOIN city_dim c ON r.City = c.City
-# MAGIC JOIN customer_type_dim ct ON r.`Customer type` = ct.CustomerType
-# MAGIC JOIN gender_dim g ON r.Gender = g.Gender
-# MAGIC JOIN product_line_dim p ON r.`Product line` = p.ProductLine
-# MAGIC JOIN payment_dim pm ON r.Payment = pm.PaymentMethod;
+# MAGIC JOIN DateDimension dd ON to_date(r.Date, 'M/d/yyyy') = dd.date
+# MAGIC JOIN BranchDimension bd ON r.Branch = bd.branch_id
+# MAGIC JOIN CityDimension cd ON r.City = cd.city
+# MAGIC JOIN CustomerTypeDimension ctd ON r.`Customer type` = ctd.customer_type
+# MAGIC JOIN GenderDimension gd ON r.Gender = gd.gender
+# MAGIC JOIN ProductLineDimension pld ON r.`Product line` = pld.product_line
+# MAGIC JOIN PaymentDimension pd ON r.Payment = pd.payment_method;
+
+# COMMAND ----------
+
+
