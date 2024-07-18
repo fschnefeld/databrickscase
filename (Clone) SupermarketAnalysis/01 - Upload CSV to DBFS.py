@@ -109,8 +109,9 @@ df.createOrReplaceTempView("raw_data")
 
 # MAGIC %sql
 # MAGIC -- Date Dimension Table
-# MAGIC INSERT INTO DateDimension (date, day, month, year, quarter, day_of_week)
-# MAGIC SELECT DISTINCT 
+# MAGIC TRUNCATE TABLE DateDimension;
+# MAGIC
+# MAGIC INSERT INTO DateDimension (date, day, month, year, quarter, day_of_week)SELECT DISTINCT 
 # MAGIC     to_date(Date, 'M/d/yyyy') AS date,
 # MAGIC     day(to_date(Date, 'M/d/yyyy')) AS day,
 # MAGIC     month(to_date(Date, 'M/d/yyyy')) AS month,
@@ -153,6 +154,9 @@ df.createOrReplaceTempView("raw_data")
 # COMMAND ----------
 
 # MAGIC %sql
+# MAGIC -- Ensure idempotency by truncating SalesFact before insertion
+# MAGIC TRUNCATE TABLE SalesFact;
+# MAGIC
 # MAGIC -- Insert data into SalesFact Table
 # MAGIC INSERT INTO SalesFact (invoice_id, date_key, time, branch_key, city_key, customer_type_key, gender_key, product_line_key, unit_price, quantity, tax, total, payment_key, cogs, gross_margin_percentage, gross_income, rating)
 # MAGIC SELECT 
